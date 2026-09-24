@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>東京行 10.6–10.11</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#131c33; --navy-2:#1e2c4d; --paper:#f5efe0; --paper-2:#ece2c8;
+  --vermillion:#c23b22; --gold:#c9a227; --ink:#1b2a4a; --muted:#8b93aa;
+  --line: rgba(245,239,224,0.14);
+  font-family:'Microsoft JhengHei','微軟正黑體','PingFang TC','Noto Sans TC',sans-serif;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --navy:#131c33; --navy-2:#1e2c4d; --paper:#f5efe0; } }
+:root[data-theme="dark"]{ --navy:#131c33; --navy-2:#1e2c4d; --paper:#f5efe0; }
+html{ scroll-padding-top: env(safe-area-inset-top, 0px); box-sizing:border-box; }
+*,*::before,*::after{ box-sizing:inherit; font-family:inherit; }
+body{ margin:0; background:var(--navy); color:var(--paper); min-height:100%; -webkit-font-smoothing:antialiased; }
+.app{ max-width:480px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; position:relative; }
+
+header.top{ padding:22px 20px 16px; position:sticky; top:0; z-index:5; background:linear-gradient(180deg, var(--navy) 70%, transparent); }
+header.top .eyebrow{ color:var(--gold); font-size:12.5px; letter-spacing:.04em; margin:0 0 4px; }
+header.top h1{ font-weight:700; font-size:24px; margin:0; line-height:1.25; }
+header.top .sub{ color:var(--muted); font-size:13px; margin-top:6px; }
+
+main{ flex:1; padding:4px 16px 100px; }
+.panel{ display:none; }
+.panel.active{ display:block; animation:fade .25s ease; }
+@keyframes fade{ from{opacity:0; transform:translateY(4px)} to{opacity:1; transform:translateY(0)} }
+
+.daytabs{ display:flex; gap:8px; overflow-x:auto; padding:6px 0 14px; -webkit-overflow-scrolling:touch; }
+.daytabs::-webkit-scrollbar{ display:none; }
+.daypill{ flex:0 0 auto; padding:8px 14px; border-radius:999px; border:1px solid var(--line); background:var(--navy-2); color:var(--paper); font-size:13px; font-weight:500; cursor:pointer; white-space:nowrap; }
+.daypill.active{ background:var(--vermillion); border-color:var(--vermillion); color:#fff; }
+.daylabel{ font-size:15px; font-weight:700; color:var(--gold); margin:2px 2px 10px; }
+
+.item{ background:var(--paper); color:var(--ink); border-radius:14px; padding:14px 15px; margin-bottom:10px; position:relative; }
+.item .time{ font-weight:700; font-size:13px; color:var(--vermillion); }
+.item .name{ font-weight:700; font-size:16px; margin:3px 0 4px; }
+.item .transit{ font-size:12.5px; color:#5c5238; line-height:1.5; margin-bottom:8px; }
+.item a.mapbtn{ display:inline-flex; align-items:center; gap:5px; font-size:12.5px; font-weight:700; color:#fff; background:var(--ink); padding:7px 12px; border-radius:999px; text-decoration:none; }
+
+.card{ background:var(--navy-2); border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:12px; }
+.card h3{ font-size:16px; font-weight:700; margin:0 0 8px; color:var(--gold); }
+.card p{ font-size:13.5px; line-height:1.6; color:var(--paper); margin:0 0 6px; }
+
+.hotelmap{ margin-top:10px; }
+.hotelmap a{ color:#fff; background:var(--vermillion); padding:9px 14px; border-radius:999px; font-size:13px; font-weight:700; text-decoration:none; display:inline-block; }
+
+.tool{ background:var(--paper); color:var(--ink); border-radius:14px; padding:16px; margin-bottom:14px; }
+.tool h3{ font-size:15px; font-weight:700; margin:0 0 12px; color:var(--vermillion); }
+.tool .field{ margin-bottom:10px; }
+.tool label{ display:block; font-size:12px; color:#6b6248; margin-bottom:4px; }
+.tool input[type="number"]{ width:100%; font-size:17px; padding:10px 12px; border-radius:10px; border:1px solid #d8cfae; background:#fff; color:var(--ink); }
+
+/* 交通：地圖橫幅 */
+.map-banner{
+  position:relative; border-radius:18px; overflow:hidden; margin-bottom:14px; padding:26px 20px;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(201,162,39,.18), transparent 45%),
+    radial-gradient(circle at 80% 75%, rgba(194,59,34,.22), transparent 50%),
+    linear-gradient(135deg, var(--navy-2), var(--navy));
+  border:1px solid var(--line);
+}
+.map-banner .mb-tag{ font-size:11.5px; color:var(--gold); letter-spacing:.05em; margin-bottom:6px; }
+.map-banner h2{ font-size:19px; font-weight:700; margin:0 0 6px; color:#fff; }
+.map-banner p{ font-size:12.5px; color:var(--muted); line-height:1.6; margin:0 0 14px; }
+.map-banner .mb-btn{ display:inline-flex; align-items:center; gap:6px; background:var(--gold); color:var(--ink); font-weight:700; font-size:13px; padding:10px 16px; border-radius:999px; text-decoration:none; }
+.map-banner .mb-lines{ display:flex; gap:6px; margin-top:14px; flex-wrap:wrap; }
+.map-banner .mb-dot{ width:22px; height:6px; border-radius:4px; }
+
+.detect-box{ display:flex; gap:10px; align-items:flex-start; background:var(--navy-2); border:1px solid var(--line); border-radius:14px; padding:14px 16px; margin-bottom:12px; }
+.detect-ic{ font-size:20px; }
+.detect-title{ font-weight:700; font-size:14px; color:var(--paper); }
+.detect-sub{ font-size:12.5px; color:var(--muted); margin-top:2px; }
+
+.line-group{ background:var(--navy-2); border:1px solid var(--line); border-radius:14px; margin-bottom:10px; overflow:hidden; }
+.line-head{ display:flex; align-items:center; gap:10px; padding:14px 16px; cursor:pointer; }
+.line-dot{ width:12px; height:12px; border-radius:50%; flex-shrink:0; }
+.line-name{ flex:1; font-weight:700; font-size:14px; }
+.line-count{ font-size:12px; color:var(--muted); }
+.line-chev{ font-size:11px; color:var(--muted); transition:transform .2s; margin-left:4px; }
+.line-group.open .line-chev{ transform:rotate(180deg); }
+.line-stations{ display:none; padding:6px 16px 14px 20px; max-height:340px; overflow-y:auto; }
+.line-group.open .line-stations{ display:block; }
+.station-row{ position:relative; padding:7px 0 7px 20px; font-size:13.5px; color:var(--paper); display:flex; align-items:center; gap:8px; }
+.station-row::before{ content:""; position:absolute; left:2px; top:50%; transform:translateY(-50%); width:8px; height:8px; border-radius:50%; background:var(--line-color, var(--gold)); }
+.station-row::after{ content:""; position:absolute; left:5.5px; top:0; bottom:0; width:2px; background:var(--line-color, var(--gold)); opacity:.35; }
+.station-row:first-child::after{ top:50%; }
+.station-row:last-child::after{ bottom:50%; }
+.station-row.transfer{ font-weight:700; }
+.station-row.transfer::before{ width:12px; height:12px; left:0; border:2px solid var(--navy-2); box-shadow:0 0 0 2px var(--line-color, var(--gold)); background:var(--navy-2); }
+.transfer-tag{ font-size:10px; font-weight:700; color:var(--ink); background:var(--gold); padding:2px 7px; border-radius:999px; }
+
+.total-card{ background:linear-gradient(135deg,#8a2a17,var(--vermillion)); border-radius:16px; padding:20px; margin-bottom:12px; }
+.total-card .tlabel{ font-size:12.5px; color:#f6d9cf; margin-bottom:6px; }
+.total-card .tnum{ font-size:30px; font-weight:700; color:#fff; }
+.total-card .tsub{ font-size:12px; color:#f6d9cf; margin-top:6px; }
+
+.cap-card{ background:var(--navy-2); border:1px solid var(--line); border-radius:16px; padding:18px; margin-bottom:12px; }
+.cap-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; gap:10px; }
+.cap-row span{ font-size:13px; color:var(--muted); }
+.cap-row input{ width:130px; text-align:right; font-size:16px; font-weight:700; padding:8px 10px; border-radius:10px; border:1px solid var(--line); background:var(--navy); color:#fff; }
+.cap-line{ display:flex; justify-content:space-between; font-size:13.5px; padding:7px 0; color:var(--paper); }
+.cap-line.highlight{ color:var(--gold); font-weight:700; border-top:1px solid var(--line); margin-top:4px; padding-top:10px; }
+.cap-bar{ height:8px; border-radius:999px; background:var(--navy); overflow:hidden; margin:6px 0 2px; }
+.cap-bar-fill{ height:100%; background:var(--gold); width:0%; transition:width .2s; }
+
+details.rate-card{ background:var(--navy-2); border:1px solid var(--line); border-radius:14px; padding:14px 16px; margin-bottom:14px; }
+details.rate-card summary{ font-size:13.5px; font-weight:700; color:var(--paper); cursor:pointer; list-style:none; }
+details.rate-card summary::-webkit-details-marker{ display:none; }
+details.rate-card label{ display:block; font-size:12px; color:var(--muted); margin:10px 0 4px; }
+details.rate-card input{ width:100%; font-size:15px; padding:8px 10px; border-radius:10px; border:1px solid var(--line); background:var(--navy); color:#fff; }
+
+.budget-input{ width:100%; font-size:15px; padding:9px 10px; border-radius:10px; border:1px solid var(--line); background:var(--navy); color:#fff; }
+
+.station-badge{ display:inline-block; font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:999px; margin-left:6px; vertical-align:middle; }
+
+.section-title{ font-size:13px; font-weight:700; color:var(--muted); margin:18px 4px 8px; }
+.note{ font-size:12px; color:var(--muted); margin-top:14px; line-height:1.6; }
+
+nav.bottom{ position:sticky; bottom:0; left:0; right:0; z-index:10; display:flex; background:var(--navy-2); border-top:1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); }
+nav.bottom button{ flex:1; background:none; border:none; color:var(--muted); padding:10px 2px 8px; display:flex; flex-direction:column; align-items:center; gap:3px; font-size:10.5px; cursor:pointer; }
+nav.bottom button .ic{ font-size:19px; }
+nav.bottom button.active{ color:var(--gold); }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <p class="eyebrow">TOKYO · 2026.10.6 – 10.11</p>
+    <h1 id="pageTitle">每日行程</h1>
+    <p class="sub" id="pageSub">2人 · 星宇航空 · 東武LEVANT東京</p>
+  </header>
+
+  <main>
+    <!-- 每日行程 -->
+    <section class="panel active" id="panel-days">
+      <div class="daytabs" id="daytabs"></div>
+      <div id="dayContent"></div>
+    </section>
+
+    <!-- 交通 -->
+    <section class="panel" id="panel-transit">
+      <div class="map-banner">
+        <div class="mb-tag">TOKYO SUBWAY NETWORK</div>
+        <h2>東京地鐵路網</h2>
+        <p>正式路網圖是官方版權內容，無法直接嵌進頁面顯示，改用下方可縮放的官方互動地圖，涵蓋全部路線與轉乘資訊。</p>
+        <a class="mb-btn" href="https://www.tokyometro.jp/lang_en/station/index.html" target="_blank">🗺️ 開啟東京地鐵大圖 →</a>
+        <div class="mb-lines" id="mbLines"></div>
+      </div>
+
+      <div class="detect-box">
+        <span class="detect-ic">🚉</span>
+        <div>
+          <div class="detect-title">依行程偵測：東京</div>
+          <div class="detect-sub">建議 IC 卡：Suica / PASMO　・　金色外框站名＝轉乘站</div>
+        </div>
+      </div>
+
+      <div id="lineList"></div>
+
+      <div class="card">
+        <h3>其他官方地圖版本</h3>
+        <div class="hotelmap" style="display:flex;gap:8px;flex-wrap:wrap">
+          <a href="https://www.tokyometro.jp/en/subwaymap/index.html" target="_blank" style="background:var(--ink)">東京メトロ PDF →</a>
+          <a href="https://www.kotsu.metro.tokyo.jp/eng/maps/subway/" target="_blank" style="background:var(--ink)">都營地下鐵 PDF →</a>
+        </div>
+      </div>
+
+      <div class="tool">
+        <h3>🚇 IC卡建議儲值試算</h3>
+        <p style="font-size:12.5px;color:#6b6248;margin:0 0 10px;text-align:center">行程地鐵/JR交通費估算約 <b>5,800円/人</b>（不含機場往返與巴士）</p>
+        <div class="field">
+          <label>已儲值金額（円）</label>
+          <input type="number" id="icInput" inputmode="decimal" placeholder="輸入目前卡片餘額或預計儲值金額">
+        </div>
+        <div style="text-align:center;color:var(--muted);font-size:13px;margin:2px 0">差額</div>
+        <div style="font-size:22px;font-weight:700;color:var(--vermillion);text-align:center;padding:8px 0 2px" id="icResult">—</div>
+        <div style="font-size:11.5px;color:#8a8266;text-align:center" id="icHint">輸入後會顯示還需要加值多少</div>
+      </div>
+
+      <div class="card">
+        <h3>成田機場 → 錦糸町（去程）</h3>
+        <p>京成 Access特急/Skyliner + 都營淺草線或半蔵門線轉乘，約70–90分，車資約1,300円/人。</p>
+        <p>行李多可改搭利木津巴士，約1小時50分，車資約2,800円/人，直達飯店門口。</p>
+      </div>
+      <div class="card">
+        <h3>錦糸町 → 成田機場（回程）</h3>
+        <p>同去程路線，建議預留2小時（含飯店退房、拖運行李、機場辦理登機）。</p>
+      </div>
+    </section>
+
+    <!-- 預算 -->
+    <section class="panel" id="panel-budget">
+      <div class="total-card">
+        <div class="tlabel">💴 我的台幣總花費（行程花費換算）</div>
+        <div class="tnum" id="budgetTotal">NT$ 0</div>
+        <div class="tsub">2人・不含機票住宿已付款項</div>
+      </div>
+
+      <div class="cap-card">
+        <div class="cap-row">
+          <span>預算上限（日圓）</span>
+          <input type="number" id="capInput" value="50000" inputmode="decimal">
+        </div>
+        <div class="cap-line"><span>行程花費（已確認）</span><span id="tripYenTotal">¥0</span></div>
+        <div class="cap-bar"><div class="cap-bar-fill" id="capBarFill"></div></div>
+        <div class="cap-line highlight"><span>剩餘</span><span id="remainYenTotal">¥0</span></div>
+      </div>
+
+      <details class="rate-card">
+        <summary>🔁 匯率設定（換算基準：¥1 JPY）</summary>
+        <div class="field">
+          <label>1 日圓 = 多少台幣</label>
+          <input type="number" id="rateInput" value="0.21" step="0.001">
+        </div>
+      </details>
+
+      <div class="section-title">每日行程花費（可編輯）</div>
+      <div id="budgetList"></div>
+      <p class="note">迪士尼門票、澀谷SKY、展覽門票採動態定價，下方金額可依實際查到的價格自行修改，上方總計會即時更新。</p>
+    </section>
+  </main>
+
+  <nav class="bottom">
+    <button data-tab="days" class="active"><span class="ic">📅</span>每日行程</button>
+    <button data-tab="transit"><span class="ic">🚇</span>交通</button>
+    <button data-tab="budget"><span class="ic">💰</span>預算</button>
+  </nav>
+</div>
+
+<script>
+const days = [
+  { label:"10/6 二", title:"抵達日", items:[
+    {time:"08:30", name:"TPE 桃園機場出發（星宇 JX800）", note:"豪華經濟艙", map:null},
+    {time:"12:55", name:"抵達 NRT 成田機場 第2航廈", note:"入境、領行李、購買Suica/PASMO", map:null},
+    {time:"約14:34", name:"抵達東武LEVANT東京、Check-in", note:"京成Access特急+都營淺草線/半藏門線，約70–90分，1,300円/人", map:"東武ホテルレバント東京", station:{name:"錦糸町",color:"#8F76D6"}},
+    {time:"15:52", name:"東京晴空塔 SKYTREE", note:"飯店步行至錦糸町站，搭東武晴空塔線約10分", map:"東京スカイツリー", station:{name:"とうきょうスカイツリー",color:"#1D2088"}},
+  ]},
+  { label:"10/7 三", title:"下町散策日", items:[
+    {time:"09:45", name:"小網神社", note:"地鐵至人形町站，步行約5分", map:"小網神社", station:{name:"人形町",color:"#B5B5AC"}},
+    {time:"11:00", name:"上野動物園", note:"人形町→上野，地鐵約15分", map:"上野動物園", station:{name:"上野",color:"#B5B5AC"}},
+    {time:"14:30", name:"淺草雷門・仲見世通", note:"上野→淺草，地鐵/步行約20分", map:"淺草雷門", station:{name:"浅草",color:"#E85298"}},
+    {time:"18:00", name:"錦糸町 PARCO", note:"淺草→錦糸町，地鐵約15分，步行回飯店", map:"錦糸町パルコ", station:{name:"錦糸町",color:"#8F76D6"}},
+  ]},
+  { label:"10/8 四", title:"東京迪士尼樂園", items:[
+    {time:"07:30", name:"飯店出發", note:"搭飯店免費接駁巴士，或JR京葉線至舞浜站", map:null},
+    {time:"09:00", name:"東京迪士尼樂園開園", note:"建議App內預約Premier Access付費快速通關", map:"東京ディズニーランド", station:{name:"舞浜",color:"#C9252A"}},
+    {time:"約21:00", name:"閉園、返回飯店", note:"同去程接駁", map:null},
+  ]},
+  { label:"10/9 五", title:"豐洲・台場", items:[
+    {time:"10:30", name:"CREVIA BASE 皮克斯展", note:"ゆりかもめ市場前駅步行約3分", map:"CREVIA BASE 東京", station:{name:"市場前",color:"#3894D0"}},
+    {time:"14:00", name:"ららぽーと豐洲 ANNEX", note:"地鐵有樂町線至豐洲站，步行約5分", map:"ららぽーと豊洲", station:{name:"豊洲",color:"#C1A470"}},
+    {time:"16:35", name:"御台場海濱公園", note:"豐洲→新橋轉百合海鷗號，約25分", map:"お台場海浜公園", station:{name:"お台場海浜公園",color:"#3894D0"}},
+  ]},
+  { label:"10/10 六", title:"澀谷・吉祥寺", items:[
+    {time:"10:00", name:"井之頭弁財天", note:"地鐵+JR約45分至吉祥寺", map:"井の頭弁財天", station:{name:"井の頭公園",color:"#00A650"}},
+    {time:"12:01", name:"貓咪咖啡廳 MOCHA", note:"吉祥寺→澀谷，京王井の頭線約20分", map:"猫カフェMOCHA 渋谷", station:{name:"渋谷",color:"#00A650"}},
+    {time:"13:49", name:"澀谷 SKY 展望台", note:"澀谷站直結，建議線上預約門票", map:"渋谷スカイ", station:{name:"渋谷",color:"#00A650"}},
+    {time:"18:30", name:"SATOブリアン 晚餐", note:"建議事先訂位", map:"SATOブリアン", station:{name:"渋谷",color:"#00A650"}},
+  ]},
+  { label:"10/11 日", title:"賦歸日", items:[
+    {time:"上午", name:"自由活動、11:00前退房", note:"行李可寄放櫃檯", map:null},
+    {time:"約13:30", name:"從飯店前往成田機場", note:"Access特急或利木津巴士，抓2小時含check-in", map:null},
+    {time:"16:20", name:"NRT → TPE（星宇 JX803）", note:"", map:null},
+    {time:"20:40", name:"抵達桃園機場", note:"", map:null},
+  ]},
+];
+
+const lines = [
+  { name:"東京メトロ半蔵門線", color:"#8F76D6",
+    stations:["渋谷","表参道","青山一丁目","永田町","半蔵門","九段下","神保町","大手町","三越前","水天宮前","清澄白河","住吉","錦糸町","押上"],
+    transfers:["渋谷","表参道","永田町","九段下","神保町","大手町","三越前","清澄白河","住吉","錦糸町","押上"] },
+  { name:"都営浅草線", color:"#E85298",
+    stations:["西馬込","馬込","中延","戸越","五反田","高輪台","泉岳寺","三田","大門","新橋","東銀座","宝町","日本橋","人形町","東日本橋","浅草橋","蔵前","浅草","本所吾妻橋","押上"],
+    transfers:["五反田","泉岳寺","三田","大門","新橋","日本橋","人形町","浅草橋","浅草","押上"] },
+  { name:"JR中央・総武線各駅停車", color:"#FFD400",
+    stations:["三鷹","吉祥寺","西荻窪","荻窪","阿佐ケ谷","高円寺","中野","東中野","大久保","新宿","代々木","千駄ケ谷","信濃町","四ツ谷","市ケ谷","飯田橋","水道橋","御茶ノ水","秋葉原","浅草橋","両国","錦糸町","亀戸","平井","新小岩","小岩","市川","本八幡","下総中山","西船橋","船橋","東船橋","津田沼","幕張本郷","幕張","新検見川","稲毛","西千葉","千葉"],
+    transfers:["三鷹","吉祥寺","中野","新宿","四ツ谷","市ケ谷","飯田橋","御茶ノ水","秋葉原","錦糸町","西船橋","船橋","千葉"] },
+  { name:"東京メトロ日比谷線", color:"#B5B5AC",
+    stations:["北千住","南千住","三ノ輪","入谷","上野","仲御徒町","秋葉原","小伝馬町","人形町","茅場町","八丁堀","築地","東銀座","銀座","日比谷","霞ケ関","虎ノ門ヒルズ","神谷町","六本木","広尾","恵比寿","中目黒"],
+    transfers:["北千住","上野","秋葉原","人形町","銀座","日比谷","霞ケ関","六本木","恵比寿","中目黒"] },
+  { name:"東武スカイツリーライン（浅草−北千住）", color:"#1D2088",
+    stations:["浅草","とうきょうスカイツリー","曳舟","東向島","鐘ヶ淵","堀切","牛田","北千住"],
+    transfers:["浅草","曳舟","北千住"] },
+  { name:"東京メトロ有楽町線", color:"#C1A470",
+    stations:["和光市","地下鉄成増","地下鉄赤塚","平和台","氷川台","小竹向原","千川","要町","池袋","東池袋","護国寺","江戸川橋","飯田橋","市ケ谷","麹町","永田町","桜田門","有楽町","銀座一丁目","新富町","月島","豊洲","辰巳","新木場"],
+    transfers:["小竹向原","池袋","飯田橋","市ケ谷","永田町","月島","豊洲","新木場"] },
+  { name:"ゆりかもめ", color:"#3894D0",
+    stations:["新橋","汐留","竹芝","日の出","芝浦ふ頭","お台場海浜公園","台場","東京国際クルーズターミナル","テレコムセンター","青海","東京ビッグサイト","有明","有明テニスの森","市場前","豊洲"],
+    transfers:["新橋","豊洲"] },
+  { name:"京王井の頭線", color:"#00A650",
+    stations:["渋谷","神泉","駒場東大前","池ノ上","下北沢","新代田","東松原","明大前","永福町","西永福","浜田山","高井戸","富士見ヶ丘","久我山","三鷹台","井の頭公園","吉祥寺"],
+    transfers:["渋谷","下北沢","明大前","吉祥寺"] },
+  { name:"JR京葉線", color:"#C9252A",
+    stations:["東京","八丁堀","越中島","潮見","新木場","葛西臨海公園","舞浜","新浦安","南船橋","海浜幕張","千葉みなと","千葉"],
+    transfers:["東京","新木場","南船橋","海浜幕張","千葉"] },
+];
+
+function textColorFor(hex){
+  const c = hex.replace("#","");
+  const r=parseInt(c.substr(0,2),16), g=parseInt(c.substr(2,2),16), b=parseInt(c.substr(4,2),16);
+  const yiq = (r*299+g*587+b*114)/1000;
+  return yiq >= 150 ? "#1b2a4a" : "#ffffff";
+}
+
+const budget = [
+  { day:"Day1 抵達", yen:1300+2000, note:"機場交通＋晴空塔展望台（估）" },
+  { day:"Day2 下町", yen:600+900, note:"上野動物園門票＋地鐵" },
+  { day:"Day3 迪士尼", yen:10500+500, note:"門票約9,400–12,400円＋接駁" },
+  { day:"Day4 豐洲台場", yen:2000+1000, note:"展覽門票（估）＋交通" },
+  { day:"Day5 澀谷吉祥寺", yen:1600+2300+1200, note:"貓咖＋澀谷SKY＋交通" },
+  { day:"Day6 賦歸", yen:1300, note:"回程機場交通" },
+];
+
+function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+function mapLink(q){ return "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(q); }
+
+function renderDays(){
+  const tabs = document.getElementById("daytabs");
+  const content = document.getElementById("dayContent");
+  tabs.innerHTML = days.map((d,i)=>`<button class="daypill${i===0?" active":""}" data-day="${i}">${d.label}</button>`).join("");
+  function show(i){
+    const d = days[i];
+    content.innerHTML = `<div class="daylabel">${esc(d.title)}</div>` + d.items.map(it=>`
+      <div class="item">
+        <div class="time">${esc(it.time)}</div>
+        <div class="name">${esc(it.name)}${it.station ? `<span class="station-badge" style="background:${it.station.color};color:${textColorFor(it.station.color)}">${esc(it.station.name)}站</span>` : ""}</div>
+        ${it.note ? `<div class="transit">${esc(it.note)}</div>` : ""}
+        ${it.map ? `<a class="mapbtn" href="${mapLink(it.map)}" target="_blank">📍 開啟導航</a>` : ""}
+      </div>`).join("");
+    [...tabs.children].forEach((b,idx)=>b.classList.toggle("active", idx===i));
+  }
+  tabs.addEventListener("click", e=>{
+    const btn = e.target.closest(".daypill");
+    if(!btn) return;
+    show(+btn.dataset.day);
+  });
+  show(0);
+}
+
+function renderMbLines(){
+  document.getElementById("mbLines").innerHTML = lines.map(l=>`<span class="mb-dot" style="background:${l.color}" title="${esc(l.name)}"></span>`).join("");
+}
+
+function renderLines(){
+  const wrap = document.getElementById("lineList");
+  wrap.innerHTML = lines.map((l,i)=>`
+    <div class="line-group" data-i="${i}">
+      <div class="line-head">
+        <span class="line-dot" style="background:${l.color}"></span>
+        <span class="line-name">${esc(l.name)}</span>
+        <span class="line-count">${l.stations.length}站</span>
+        <span class="line-chev">▾</span>
+      </div>
+      <div class="line-stations">
+        ${l.stations.map(s=>{
+          const isT = l.transfers.includes(s);
+          return `<div class="station-row${isT?" transfer":""}" style="--line-color:${l.color}">${esc(s)}${isT?'<span class="transfer-tag">轉乘</span>':''}</div>`;
+        }).join("")}
+      </div>
+    </div>`).join("");
+  wrap.querySelectorAll(".line-head").forEach(h=>{
+    h.addEventListener("click", ()=> h.parentElement.classList.toggle("open"));
+  });
+}
+
+function renderBudget(){
+  const list = document.getElementById("budgetList");
+  list.innerHTML = budget.map((b,i)=>`
+    <div class="card">
+      <h3>${esc(b.day)}</h3>
+      <p>${esc(b.note)}</p>
+      <div class="field">
+        <label>日圓／人</label>
+        <input type="number" class="budget-input" data-idx="${i}" value="${b.yen}" inputmode="decimal">
+      </div>
+    </div>`).join("");
+  list.querySelectorAll(".budget-input").forEach(inp=>{
+    inp.addEventListener("input", ()=>{
+      budget[+inp.dataset.idx].yen = parseFloat(inp.value) || 0;
+      computeAll();
+    });
+  });
+}
+
+function computeAll(){
+  const rate = parseFloat(document.getElementById("rateInput").value) || 0.21;
+  const cap = parseFloat(document.getElementById("capInput").value) || 0;
+
+  const tripYen = budget.reduce((s,b)=>s+(b.yen||0),0) * 2; // 2人
+  const remainYen = cap - tripYen;
+  const totalTwd = Math.round(tripYen * rate);
+
+  document.getElementById("budgetTotal").textContent = "NT$ " + totalTwd.toLocaleString();
+  document.getElementById("tripYenTotal").textContent = "¥" + tripYen.toLocaleString();
+  document.getElementById("remainYenTotal").textContent = "¥" + remainYen.toLocaleString();
+  const pct = cap > 0 ? Math.min(100, Math.round(tripYen / cap * 100)) : 0;
+  document.getElementById("capBarFill").style.width = pct + "%";
+}
+
+renderDays();
+renderMbLines();
+renderLines();
+renderBudget();
+computeAll();
+
+document.getElementById("capInput").addEventListener("input", computeAll);
+document.getElementById("rateInput").addEventListener("input", computeAll);
+
+// IC卡儲值試算
+const TRANSIT_ESTIMATE_YEN = 5800;
+const icInput = document.getElementById("icInput");
+const icResult = document.getElementById("icResult");
+const icHint = document.getElementById("icHint");
+function updateIC(){
+  const val = parseFloat(icInput.value);
+  if(isNaN(val) || icInput.value===""){
+    icResult.textContent = "—";
+    icHint.textContent = "輸入後會顯示還需要加值多少";
+    return;
+  }
+  const diff = TRANSIT_ESTIMATE_YEN - val;
+  const rate = parseFloat(document.getElementById("rateInput").value) || 0.21;
+  if(diff > 0){
+    icResult.textContent = "還需加值 ¥" + diff.toLocaleString();
+    icHint.textContent = "約合 NT$" + Math.round(diff*rate).toLocaleString();
+  } else {
+    icResult.textContent = "已足夠 ✓";
+    icHint.textContent = "比估算金額多 ¥" + Math.abs(diff).toLocaleString();
+  }
+}
+icInput.addEventListener("input", updateIC);
+updateIC();
+
+const titles = { days:["每日行程","2人 · 星宇航空 · 東武LEVANT東京"], transit:["交通","地鐵為主 · Suica/PASMO"], budget:["預算","估算金額，僅供參考"] };
+document.querySelectorAll("nav.bottom button").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    const tab = btn.dataset.tab;
+    document.querySelectorAll("nav.bottom button").forEach(b=>b.classList.toggle("active", b===btn));
+    document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
+    document.getElementById("panel-"+tab).classList.add("active");
+    document.getElementById("pageTitle").textContent = titles[tab][0];
+    document.getElementById("pageSub").textContent = titles[tab][1];
+  });
+});
+</script>
+</body>
+</html>
